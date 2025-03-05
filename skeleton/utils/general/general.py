@@ -160,31 +160,24 @@ class Redirect:
         self.operation = operation
         self.class_name = class_name
 
-    # CHANGE IT TO ARRAY/ DICTIONARY, LOOP AND IF KEY MATCHES, EXECUTE THE CODE
     def identify_operation(self):
-        data = self.operation
-        class_name = self.class_name
-        # classes = {"CREATE": class_name.create, "UPDATE": class_name.change}
-        if data == "CREATE":
-            return class_name.create()
-        elif data == "UPDATE":
-            return class_name.change()
-        elif data == "LINE_UPDATE":
-            return class_name.change_line()
-        elif data == "DEACTIVATE":
-            return class_name.deactivate()
-        elif data == "REACTIVATE":
-            return class_name.reactivate()
-        elif data == "DELETE":
-            return class_name.delete()
-        elif data == "LINE_DELETE":
-            return class_name.delete_line()
-        elif data == "READ":
-            return class_name.read()
-        elif data == "UPDATE_STATUS":
-            return class_name.update_status()
-        else:
-            return {"error": "Invalid Operation"}
+        operations = {
+            "CREATE": self.class_name.create,
+            "READ": self.class_name.fetch,
+            "READ_DETAIL": self.class_name.fetch_details,
+            "UPDATE": self.class_name.update,
+            "DELETE": self.class_name.delete,
+            "LINE_UPDATE": self.class_name.change_line,
+            "LINE_DELETE": self.class_name.delete_line,
+            "DEACTIVATE": self.class_name.deactivate,
+            "REACTIVATE": self.class_name.reactivate,
+            "UPDATE_STATUS": self.class_name.update_status
+        }
+        
+        operation = operations.get(self.operation)
+        if operation:
+            return operation()
+        return {"error": "Invalid Operation"}
 
 
 class ProcessHeaderInfo:

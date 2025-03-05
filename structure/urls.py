@@ -16,71 +16,32 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-
-from skeleton.utils.queries.products import (
-    create_product,
-    update_product,
-    fetch_products,
-    delete_product,
-)
-
-from skeleton.utils.queries.customers import (
-    create_customer,
-    update_customer,
-    batch_create_update_customers,
-    fetch_customers,
-    delete_customer,
-)
-
-from skeleton.utils.queries.orders import (
-    create_order, fetch_order, fetch_orders, update_order, delete_order
-)
-
+from skeleton.views import product_views, customer_views, order_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # Create a new product
-    path('product/create_product/', create_product, name='create_product'),
-
-    # Update an existing product by ID
-    # http://localhost:8000/update_product/1/
-    path('product/update_product/<int:product_id>/', update_product, name='update_product'),
-
-    # Fetch products (single or multiple)
-    # "http://localhost:8000/fetch_products/?id=1"
-    path('product/fetch_products/', fetch_products, name='fetch_products'),
-
-    # Delete a product by ID
-    # http://localhost:8000/delete_product/1/
-    path('product/delete_product/<int:product_id>/', delete_product, name='delete_product'),
-
-# Create a new customer
-    path('customers/create/', create_customer, name='create_customer'),
-
-    # Update an existing customer
-    path('customers/update/<int:customer_id>/', update_customer, name='update_customer'),
-
-    # Batch create or update customers
-    path('customers/batch-create-update/', batch_create_update_customers, name='batch_create_update_customers'),
-
-    # Fetch customers (single or multiple)
-    path('customers/fetch/', fetch_customers, name='fetch_customers'),
-
-    # Delete a customer
-    path('customers/delete/<int:customer_id>/', delete_customer, name='delete_customer'),
-
-# Create an order
-    path('orders/create/', create_order, name='create_order'),
-
-    # Fetch a single order
-    path('orders/fetch/<int:order_id>/', fetch_order, name='fetch_order'),
-
-    # Fetch multiple orders
-    path('orders/fetch/', fetch_orders, name='fetch_orders'),
-
-    # Update an order
-    path('orders/update/<int:order_id>/', update_order, name='update_order'),
-
-    # Delete an order
-    path('orders/delete/<int:order_id>/', delete_order, name='delete_order'),
+    
+    # Product URLs
+    path('create_product/', product_views.create_product, name='create_product'),
+    path('update_product/', product_views.update_product, name='update_product'),
+    path('delete_product/', product_views.delete_product, name='delete_product'),
+    path('fetch_products/', product_views.fetch_products, name='fetch_products'),
+    path('fetch_product/<int:product_id>/', product_views.fetch_product, name='fetch_product'),
+    path('batch_product/', product_views.batch_product, name='batch_product'),
+    
+    # Customer URLs
+    path('create_customer/', customer_views.create_customer, name='create_customer'),
+    path('update_customer/', customer_views.update_customer, name='update_customer'),
+    path('delete_customer/', customer_views.delete_customer, name='delete_customer'),
+    path('fetch_customers/', customer_views.fetch_customers, name='fetch_customers'),
+    path('fetch_customer/<int:customer_id>/', customer_views.fetch_customer, name='fetch_customer'),
+    path('batch_customer/', customer_views.batch_customer, name='batch_customer'),
+    
+    # Order URLs
+    path('create_order/', order_views.create_order, name='create_order'),
+    path('update_order/', order_views.update_order, name='update_order'),
+    path('delete_order/', order_views.delete_order, name='delete_order'),
+    path('fetch_orders/', order_views.fetch_orders, name='fetch_orders'),
+    path('fetch_order/<int:order_id>/', order_views.fetch_order, name='fetch_order'),
+    path('batch_order/', order_views.batch_order, name='batch_order'),
 ]
