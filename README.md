@@ -27,30 +27,30 @@ A Django-based REST API for managing an e-commerce system with Product, Customer
 
 ### Products
 
-- `POST /api/products/create/` - Create a new product
-- `POST /api/products/update/` - Update existing product
-- `POST /api/products/delete/` - Delete a product
-- `GET /api/products/fetch/` - List all products with pagination
-- `GET /api/products/fetch/{id}/` - Get single product details
-- `POST /api/products/batch/` - Batch operations for products
+- `POST /create_product/` - Create a new product
+- `POST /update_product/` - Update existing product
+- `POST /delete_product/` - Delete a product
+- `GET /fetch_products/` - List all products with pagination
+- `GET /fetch_product/{product_id}/` - Get single product details
+- `POST /batch_product/` - Batch operations for products
 
 ### Customers
 
-- `POST /api/customers/create/` - Register new customer
-- `POST /api/customers/update/` - Update customer details
-- `POST /api/customers/delete/` - Delete customer
-- `GET /api/customers/fetch/` - List all customers with pagination
-- `GET /api/customers/fetch/{id}/` - Get single customer details
-- `POST /api/customers/batch/` - Batch operations for customers
+- `POST /create_customer/` - Register new customer
+- `POST /update_customer/` - Update customer details
+- `POST /delete_customer/` - Delete customer
+- `GET /fetch_customers/` - List all customers with pagination
+- `GET /fetch_customer/{customer_id}/` - Get single customer details
+- `POST /batch_customer/` - Batch operations for customers
 
 ### Orders
 
-- `POST /api/orders/create/` - Create new order
-- `POST /api/orders/update/` - Update existing order
-- `POST /api/orders/delete/` - Delete order
-- `GET /api/orders/fetch/` - List all orders with pagination
-- `GET /api/orders/fetch/{id}/` - Get single order details
-- `POST /api/orders/batch/` - Batch operations for orders
+- `POST /create_order/` - Create new order
+- `POST /update_order/` - Update existing order
+- `POST /delete_order/` - Delete order
+- `GET /fetch_orders/` - List all orders with pagination
+- `GET /fetch_order/{order_id}/` - Get single order details
+- `POST /batch_order/` - Batch operations for orders
 
 ## Setup
 
@@ -92,7 +92,7 @@ python manage.py runserver
 All API endpoints accept and return JSON data. Here's an example of creating an order:
 
 ```json
-// POST /api/orders/create/
+// POST /create_order/
 {
   "customer_id": 1,
   "order_lines": [
