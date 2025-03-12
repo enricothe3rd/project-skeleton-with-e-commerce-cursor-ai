@@ -1,17 +1,101 @@
 import json
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse, HttpResponse
 from django.db.models import Count
 from django.core.paginator import Paginator
 from skeleton.models import Customer
 from skeleton.utils.general.general import Queries, EvaluateQueryResults
 from skeleton.utils.queries.validations.core import validate_string
+from skeleton.utils.authenticate import RequestAuthentication
+from django.middleware.csrf import get_token
 
-@csrf_exempt
+CUSTOMER_AUTHORIZATIONS = ["customer_management"]
+
 def create_customer(request):
     try:
+        auth = RequestAuthentication(
+            function=lambda req: _create_customer(req),
+            request=request,
+            authorizations=CUSTOMER_AUTHORIZATIONS
+        )
+        result = auth.execute()
+        if isinstance(result, dict):
+            return JsonResponse(result, status=400)
+        return result
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+def update_customer(request):
+    auth = RequestAuthentication(
+        function=lambda req: _update_customer(req),
+        request=request,
+        authorizations=CUSTOMER_AUTHORIZATIONS
+    )
+    return auth.execute()
+
+def delete_customer(request):
+    auth = RequestAuthentication(
+        function=lambda req: _delete_customer(req),
+        request=request,
+        authorizations=CUSTOMER_AUTHORIZATIONS
+    )
+    return auth.execute()
+
+def fetch_customers(request):
+    try:
+        auth = RequestAuthentication(
+            function=lambda req: _fetch_customers(req),
+            request=request,
+            authorizations=CUSTOMER_AUTHORIZATIONS
+        )
+        result = auth.execute()
+        if isinstance(result, dict):
+            return JsonResponse(result, status=400)
+        return result
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+def fetch_customer(request, customer_id):
+    auth = RequestAuthentication(
+        function=lambda req: _fetch_customer(req, customer_id),
+        request=request,
+        authorizations=CUSTOMER_AUTHORIZATIONS
+    )
+    return auth.execute()
+
+def batch_customer(request):
+    auth = RequestAuthentication(
+        function=lambda req: _batch_customer(req),
+        request=request,
+        authorizations=CUSTOMER_AUTHORIZATIONS
+    )
+    return auth.execute()
+
+def csrf(request):
+    if request.method == 'GET':
+        token = get_token(request)
+        response = JsonResponse({'csrfToken': token})
+        return response
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+def _create_customer(request):
+    try:
         if request.method == 'POST':
-            data = json.loads(request.body)
+            # Add debug logging
+            print("DEBUG: Request method:", request.method)
+            print("DEBUG: Content-Type:", request.headers.get('Content-Type'))
+            print("DEBUG: Raw body:", request.body)
+            
+            try:
+                data = json.loads(request.body)
+            except json.JSONDecodeError as e:
+                print("DEBUG: JSON decode error:", str(e))
+                return JsonResponse({
+                    'status': False,
+                    'message': 'Invalid JSON format',
+                    'error': str(e)
+                }, status=400)
+
+            print("DEBUG: Parsed data:", data)
             
             # Validate inputs
             name = validate_string(data.get('name'), 'name')
@@ -40,10 +124,10 @@ def create_customer(request):
                 
         return JsonResponse({'error': 'Invalid request method'}, status=405)
     except Exception as e:
+        print("Exception:", str(e))  # Add this debug print
         return JsonResponse({'error': str(e)}, status=400)
 
-@csrf_exempt
-def update_customer(request):
+def _update_customer(request):
     try:
         if request.method == 'POST':
             data = json.loads(request.body)
@@ -79,8 +163,7 @@ def update_customer(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
 
-@csrf_exempt
-def delete_customer(request):
+def _delete_customer(request):
     try:
         if request.method == 'POST':
             data = json.loads(request.body)
@@ -120,8 +203,7 @@ def delete_customer(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
 
-@csrf_exempt
-def fetch_customers(request):
+def _fetch_customers(request):
     try:
         if request.method == 'GET':
             page = int(request.GET.get('page', 1))
@@ -152,8 +234,7 @@ def fetch_customers(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
 
-@csrf_exempt
-def fetch_customer(request, customer_id):
+def _fetch_customer(request, customer_id):
     try:
         if request.method == 'GET':
             customer = Customer.objects.filter(id=customer_id).first()
@@ -178,8 +259,7 @@ def fetch_customer(request, customer_id):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
 
-@csrf_exempt
-def batch_customer(request):
+def _batch_customer(request):
     try:
         if request.method == 'POST':
             data = json.loads(request.body)

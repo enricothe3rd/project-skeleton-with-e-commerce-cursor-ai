@@ -3,8 +3,11 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.core.paginator import Paginator
 from skeleton.models import Product
+from skeleton.utils.general.BuildHttpResponse import BuildResponse
 from skeleton.utils.general.general import Queries, EvaluateQueryResults
 from skeleton.utils.queries.validations.core import validate_number, validate_string
+from decimal import Decimal
+from datetime import datetime, date
 
 @csrf_exempt
 def create_product(request):
@@ -120,8 +123,8 @@ def fetch_products(request):
             page_size = int(request.GET.get('page_size', 10))
             search = request.GET.get('search', '')
             
-            # Query products with optional search
-            products = Product.objects.all()
+            # Query products with optional search and ordering
+            products = Product.objects.all().order_by('id')  # Ensure consistent ordering
             if search:
                 products = products.filter(name__icontains=search)
             
@@ -129,20 +132,44 @@ def fetch_products(request):
             paginator = Paginator(products, page_size)
             current_page = paginator.get_page(page)
             
-            return JsonResponse({
+            # Preprocess the items to handle Decimal, datetime, and date fields
+            items = []
+            for product in current_page.object_list.values():
+                processed_product = {
+                    key: float(value) if isinstance(value, Decimal) else
+                         value.isoformat() if isinstance(value, (datetime, date)) else
+                         value
+                    for key, value in product.items()
+                }
+                items.append(processed_product)
+            
+            # Prepare response body
+            response_body = {
                 'status': True,
                 'message': 'Products fetched successfully',
                 'data': {
-                    'items': list(current_page.object_list.values()),
+                    'items': items,
                     'total_items': paginator.count,
                     'total_pages': paginator.num_pages,
                     'current_page': page
                 }
-            })
+            }
+            
+            # Use BuildResponse to return a consistent HTTP response
+            response = BuildResponse(response_body).get_response()
+            response.status_code = 200  # Set the status code manually
+            return response
         
-        return JsonResponse({'error': 'Invalid request method'}, status=405)
+        # Handle invalid request methods
+        response = BuildResponse({'error': 'Invalid request method'}).post_response()
+        response.status_code = 405  # Set the status code manually
+        return response
+    
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=400)
+        # Handle exceptions
+        response = BuildResponse({'error': str(e)}).post_response()
+        response.status_code = 400  # Set the status code manually
+        return response
 
 @csrf_exempt
 def fetch_product(request, product_id):

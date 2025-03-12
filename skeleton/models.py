@@ -1,4 +1,7 @@
 from django.db import models
+from django.contrib.auth.models import AbstractUser
+import jwt
+from django.conf import settings
 
 # Create your models here.
 from django.db import models
@@ -67,3 +70,21 @@ class OrderLine(models.Model):
 
     class Meta:
         db_table = 'api_orderline'  # Specify the custom table name
+
+
+class User(AbstractUser):
+    company_id = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'skeleton_user'  # Explicitly set the table name
+
+    def generate_auth_token(self):
+        payload = {
+            'user_id': self.id,
+            'username': self.username,
+            'company_id': self.company_id
+        }
+        token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
+        return token

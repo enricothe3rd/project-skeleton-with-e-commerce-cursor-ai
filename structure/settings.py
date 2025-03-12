@@ -9,9 +9,11 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
-
+import os
 from pathlib import Path
+from dotenv import load_dotenv
 
+load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -19,15 +21,26 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
+
+#SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-s3-3hfm2(k$kh7eixc9q%f(g*tgo27_n!lm^hpz5155ggr4k&+')
+DEBUG = os.getenv('DEBUG', 'False').lower() in ['true', '1', 'yes']
+
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+if not SECRET_KEY:
+    raise ValueError("Missing DJANGO_SECRET_KEY environment variable!")
+
+
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-s3-3hfm2(k$kh7eixc9q%f(g*tgo27_n!lm^hpz5155ggr4k&+'
+# SECRET_KEY = 'django-insecure-s3-3hfm2(k$kh7eixc9q%f(g*tgo27_n!lm^hpz5155ggr4k&+'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 
-ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost").split(",") if os.getenv("ALLOWED_HOSTS") else ["localhost"]
 
 
+
+CLIENT_SERVICE_URL = "http://localhost:3000"  # Replace with your frontend's URL
 # Application definition
 
 INSTALLED_APPS = [
@@ -42,11 +55,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.csrf.CsrfViewMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -82,17 +93,38 @@ WSGI_APPLICATION = 'structure.wsgi.application'
 #         'NAME': BASE_DIR / 'db.sqlite3',
 #     }
 # }
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'e-commerce-clone',
+#         'USER': 'enrico-e-commerce',
+#         'PASSWORD': '1234',
+#          'HOST': 'host.docker.internal',  # This allows Docker to connect to your local machine
+#         'PORT': '5432',
+#     }
+# }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': os.getenv('POSTGRES_DB'),
+#         'USER': os.getenv('POSTGRES_USER'),
+#         'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
+#         'HOST': os.getenv('POSTGRES_HOST', 'db'),
+#         'PORT': os.getenv('POSTGRES_PORT', '5432'),
+#     }
+# }
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'e-commerce',
-        'USER': 'enrico-e-commerce',
-        'PASSWORD': '1234',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': os.getenv('POSTGRES_DB', 'e-commerce-clone'),
+        'USER': os.getenv('POSTGRES_USER', 'enrico-e-commerce'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', '1234'),
+        'HOST': os.getenv('POSTGRES_HOST', 'localhost'),
+        'PORT': os.getenv('POSTGRES_PORT', '5432'),
     }
 }
-
 
 
 # Password validation
@@ -145,3 +177,10 @@ REST_FRAMEWORK = {
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTH_USER_MODEL = 'skeleton.User'
+
+# Add these settings
+USER_SERVICE_URL = 'http://localhost:8000'  # or whatever your user service URL is
+COMPANY_SERVICE_URL = 'http://localhost:8000'  # or whatever your company service URL is
+

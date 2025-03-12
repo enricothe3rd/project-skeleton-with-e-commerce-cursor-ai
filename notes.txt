@@ -1,0 +1,123 @@
+docker -ps   = You can verify if everything is running 
+
+
+docker-compose down  = if you change anything
+docker-compose up -d  = To restart the docker
+
+
+
+==IF YOU WANT TO TEST FETCHING DATA OR CRUD==
+1.docker exec -it django_app python manage.py dbshell
+
+2. SELECT * FROM api_product;
+
+
+
+
+==DATABASED RELATED, SAMPLE POSTGRESQL==
+=If you want the django running on docker then connected 
+on you local machine postgresql database 
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'e-commerce-clone',
+        'USER': 'your_local_user',
+        'PASSWORD': 'your_local_password',
+        'HOST': 'host.docker.internal',  # This allows Docker to connect to your local machine
+        'PORT': '5432',
+    }
+}
+
+====
+pg_dump -U your_local_user -d e-commerce-clone > db_dump.sql
+
+
+
+
+
+
+=SHORTCUT=
+Press q (if you're inside the pager view).
+Press Ctrl + C (if q doesn’t work).
+
+
+
+1. ==CLONE LOCAL DATABASE POSTGRESQL(POWER SHELL)==
+🔹-U enrico-e-commerce → Specifies the local PostgreSQL user.
+🔹-d e-commerce-clone → The database name to export.
+🔹-W → Prompts for a password (enter 1234 when prompted).
+🔹> db_dump.sql → Saves the output to db_dump.sql
+
+
+COMMAND =  pg_dump -U enrico-e-commerce -d e-commerce-clone -W > db_dump.sql
+
+2. ==CHECK IF THE FILE IS UTF-8 (POWER SHELL)===
+🔹 If the first bytes show something like 255 254, it means UTF-16 (not UTF-8).
+🔹 If it's a normal text file with readable SQL, it should be UTF-8.
+
+
+COMMAND =  Get-Content db_dump.sql -Encoding Byte | Select-Object -First 3
+
+3. ==IF CONVERTION NEEDED==
+
+COMMAND = $inputFile = "db_dump.sql"
+          $outputFile = "db_dump_utf8.sql"
+          Get-Content $inputFile | Set-Content -Encoding UTF8 $outputFile
+
+
+4. ===COPY THE CONVERTED FILE INTO DOCKER==
+COMMAND =  docker cp db_dump_utf8.sql postgres_db:/db_dump.sql
+
+5. ==ENTER THE DOCKER CONTAINER==
+COMMAND = docker exec -it postgres_db bash
+
+6. ==IMPORT THE DATABASE==
+COMMAND = psql -U enrico-e-commerce -d e-commerce-clone -f /db_dump.sql
+
+
+
+==IF YOU MISTAKEN CREATE A DATABASE ON DOCKER THIS WILL NOT AFFECT YOUR LOCAL
+ MACHINE DATA AND YOU WANT TO DROPIT ON DOCKER===
+
+1. CONNECT TO POSTGRESQL
+
+COMMAND = psql -U USERNAME/USER -d postgres
+
+2. RUN THIS ONE BY ONE OR LINE BY LINE
+
+COMMAND =  SELECT pg_terminate_backend(pg_stat_activity.pid)
+COMMAND = PRESS ENTER
+COMMAND = FROM pg_stat_activity
+COMMAND = PRESS ENTER
+COMMAND = WHERE datname = 'e-commerce-clone';
+COMMAND = PRESS ENTER
+
+3. Now, drop the database using double quotes correctly:
+COMMAND =  DROP DATABASE "e-commerce-clone";
+
+4. Verify that the database was deleted:
+COMMAND = \l
+
+
+docker exec -it postgres_db bash = 
+psql -U enrico-e-commerce -d postgres  = USER CREDENTIALS
+\c e-commerce-clone    =  try connecting to DATABASE:
+\dt         = check the tables inside:
+
+
+
+
+
+
+
+
+===Rebuild Only If Necessary===
+
+You only need to rebuild if:
+You changed the Dockerfile or docker-compose.yml
+The database container was deleted and needs to be reinitialized
+You changed environment variables related to the database
+
+docker-compose down
+docker-compose up --build -d
