@@ -1,22 +1,21 @@
-docker -ps   = You can verify if everything is running 
+
 
 
 docker-compose down  = if you change anything
 docker-compose up -d  = To restart the docker
-
-
-
-==IF YOU WANT TO TEST FETCHING DATA OR CRUD==
-1.docker exec -it django_app python manage.py dbshell
-
-2. SELECT * FROM api_product;
+docker ps -a          = List all the docker image running or stopped
+docker -ps   = List all the docker image that are running
+docker logs django_app --tail 50   =  Check Django logs for any warnings or errors:
+docker images = List all the docker image
 
 
 
 
-==DATABASED RELATED, SAMPLE POSTGRESQL==
-=If you want the django running on docker then connected 
-on you local machine postgresql database 
+
+==POSTGRESQL LOCAL MACHINE==
+**NOTE**
+    Docker database setup on local machine.
+    This setup is required when cloning database.
 
 DATABASES = {
     'default': {
@@ -24,13 +23,38 @@ DATABASES = {
         'NAME': 'e-commerce-clone',
         'USER': 'your_local_user',
         'PASSWORD': 'your_local_password',
-        'HOST': 'host.docker.internal',  # This allows Docker to connect to your local machine
+        'HOST': 'localhost',  # This allows Docker to connect to your local machine
         'PORT': '5432',
     }
 }
 
-====
-pg_dump -U your_local_user -d e-commerce-clone > db_dump.sql
+
+=DOCKER DATABASE SETUP ON SETTINGS.PY BEFORE RUNNING THE BUILD
+
+1. create .env on root folder 
+
+POSTGRES_DB=e-commerce-clone
+POSTGRES_USER=enrico-e-commerce
+POSTGRES_PASSWORD=1234
+POSTGRES_HOST=db
+POSTGRES_PORT=5432
+DJANGO_SECRET_KEY="django-insecure-s3-3hfm2(k\$kh7eixc9q\%f(g*tgo27_n!lm^hpz5155ggr4k&+"
+ALLOWED_HOSTS=localhost,127.0.0.1,mydomain.com
+DEBUG=False
+
+2.  Format you database like this on settings.py
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('POSTGRES_DB', 'e-commerce-clone'),
+        'USER': os.getenv('POSTGRES_USER', 'enrico-e-commerce'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', '1234'),
+        'HOST': os.getenv('POSTGRES_HOST', 'localhost'),
+        'PORT': os.getenv('POSTGRES_PORT', '5432'),
+    }
+}
+
 
 
 
@@ -43,37 +67,7 @@ Press Ctrl + C (if q doesn’t work).
 
 
 
-1. ==CLONE LOCAL DATABASE POSTGRESQL(POWER SHELL)==
-🔹-U enrico-e-commerce → Specifies the local PostgreSQL user.
-🔹-d e-commerce-clone → The database name to export.
-🔹-W → Prompts for a password (enter 1234 when prompted).
-🔹> db_dump.sql → Saves the output to db_dump.sql
 
-
-COMMAND =  pg_dump -U enrico-e-commerce -d e-commerce-clone -W > db_dump.sql
-
-2. ==CHECK IF THE FILE IS UTF-8 (POWER SHELL)===
-🔹 If the first bytes show something like 255 254, it means UTF-16 (not UTF-8).
-🔹 If it's a normal text file with readable SQL, it should be UTF-8.
-
-
-COMMAND =  Get-Content db_dump.sql -Encoding Byte | Select-Object -First 3
-
-3. ==IF CONVERTION NEEDED==
-
-COMMAND = $inputFile = "db_dump.sql"
-          $outputFile = "db_dump_utf8.sql"
-          Get-Content $inputFile | Set-Content -Encoding UTF8 $outputFile
-
-
-4. ===COPY THE CONVERTED FILE INTO DOCKER==
-COMMAND =  docker cp db_dump_utf8.sql postgres_db:/db_dump.sql
-
-5. ==ENTER THE DOCKER CONTAINER==
-COMMAND = docker exec -it postgres_db bash
-
-6. ==IMPORT THE DATABASE==
-COMMAND = psql -U enrico-e-commerce -d e-commerce-clone -f /db_dump.sql
 
 
 
@@ -111,8 +105,7 @@ psql -U enrico-e-commerce -d postgres  = USER CREDENTIALS
 
 
 
-
-===Rebuild Only If Necessary===
+===REBUILD ONLY IF NEEDED ELSE USE DOCKER RESTART===
 
 You only need to rebuild if:
 You changed the Dockerfile or docker-compose.yml
@@ -121,3 +114,59 @@ You changed environment variables related to the database
 
 docker-compose down
 docker-compose up --build -d
+docker restart <image name>
+
+
+
+
+
+
+
+==EXPORT LOCAL DATABASE TO POSTGREQL==
+
+***NOTE!!!!!***
+Replace your_local_db_user with your PostgreSQL username.
+Replace your_local_db_name with your database name.
+This will create a backup.sql file in your current directory.
+Also switch to localhost on database configuration on settings.py
+
+1. COMMAND =  pg_dump -U your_local_db_user -d your_local_db_name > backup.sql
+2. Move the backup.sql File into Your Project Directory / same directory of  .yml file
+3 Add this on .yml on volumes
+
+    - ./backup.sql:/docker-entrypoint-initdb.d/backup.sql
+
+4. Build the docker image
+    COMMAND = docker-compose up --build -d
+
+5. Then verify 
+
+**Note**
+docker ps -a          = List all the docker image running or stopped
+docker -ps   = List all the docker image that are running
+
+    COMMAND = docker ps 
+
+
+===DOCKER IMAGE AS PUBLIC==
+
+1. Run this on power SHELL
+    COMMAND = docker login
+
+2. Tag you images
+
+COMMAND = 
+docker tag project-skeleton-with-e-commerce-cursor-ai-web enrico21/project-skeleton-web:latest
+docker tag postgres:15 enrico21/postgres:latest
+
+3. Push the image/s on docker hub
+
+
+==TEST PULL THE DOCKER IMAGES==
+
+ docker manifest inspect enrico21/project-skeleton-web:latest
+ docker manifest inspect enrico21/postgres:latest
+
+===MAKE DOCKER MULTIPLE PLATFORM=
+docker buildx create --use
+docker buildx build --platform linux/amd64,linux/arm64 -t enrico21/project-skeleton-web:latest --push .

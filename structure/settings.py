@@ -107,13 +107,16 @@ WSGI_APPLICATION = 'structure.wsgi.application'
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': os.getenv('POSTGRES_DB'),
-#         'USER': os.getenv('POSTGRES_USER'),
-#         'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
-#         'HOST': os.getenv('POSTGRES_HOST', 'db'),
-#         'PORT': os.getenv('POSTGRES_PORT', '5432'),
+#         'NAME': 'e-commerce-clone',
+#         'USER': 'enrico-e-commerce',
+#         'PASSWORD': '1234',
+#          'HOST': 'localhost',  # This allows Docker to connect to your local machine
+#         'PORT': '5432',
 #     }
 # }
+
+
+
 
 DATABASES = {
     'default': {
